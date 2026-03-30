@@ -22,3 +22,14 @@ ENV/
 ._*
 .Spotlight-V100
 .Trashes
+LLCP2024.XPT 
+*.XPT
+*.parquet
+*.pkl
+*.npy
+df_model.parquet
+state_agg.parquet
+X_test_sc.npy
+y_test.npy
+nn_model.pkl
+charts.zip
