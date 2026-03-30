@@ -1,0 +1,20 @@
+feature,importance
+Age group,0.062
+General health,0.048
+Education,0.032
+BMI,0.031
+Physical health days,0.03
+Income,0.028
+Employment,0.015
+Senior (65+),0.012
+Mental health days,0.011
+Obese,0.011
+Race,0.01
+Total unhealthy days,0.01
+Sex,0.009
+Low income,0.008
+Chronic condition,0.007
+Smoker,0.005
+Poor health flag,0.004
+Low education,0.003
+Vulnerability score,0.002
