@@ -1,35 +1,10 @@
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints/
-*/.ipynb_checkpoints/*
-
-# Data files (too large for git)
-*.XPT
-*.xpt
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-venv/
-env/
-ENV/
-
-# OS files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
 LLCP2024.XPT 
 *.XPT
 *.parquet
 *.pkl
 *.npy
-df_model.parquet
-state_agg.parquet
-X_test_sc.npy
-y_test.npy
-nn_model.pkl
-charts.zip
+*.zip
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store
+.claude/
