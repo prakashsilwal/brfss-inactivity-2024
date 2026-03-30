@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Deep Learning Approach to Identifying High-Priority States for Physical Inactivity Intervention: BRFSS 2024</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.27.0/plotly.min.js"></script>
+<style>
+:root {
+  --ink: #1a1a2e;
+  --ink-light: #4a4a6a;
+  --ink-muted: #8888aa;
+  --paper: #fafaf8;
+  --paper-warm: #f5f3ef;
+  --border: #ddd8cc;
+  --accent: #c0392b;
+  --accent-light: #e8d5d3;
+  --link: #1a5276;
+  --success: #1e8449;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Source Serif 4', Georgia, serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --max-width: 860px;
+  --wide-width: 1100px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 18px; scroll-behavior: smooth; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-weight: 300;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header ── */
+.site-header {
+  background: var(--ink);
+  color: #fff;
+  padding: 12px 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  font-family: var(--font-mono);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.site-header .journal-name { 
+  color: #aaa;
+  text-transform: uppercase;
+}
+.site-header .open-access {
+  background: var(--accent);
+  color: #fff;
+  padding: 3px 10px;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ── Hero ── */
+.hero {
+  background: var(--paper-warm);
+  border-bottom: 1px solid var(--border);
+  padding: 4rem 2rem 3rem;
+}
+.hero-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+}
+.article-type {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.article-type::before {
+  content: '';
+  display: inline-block;
+  width: 24px;
+  height: 2px;
+  background: var(--accent);
+}
+.article-title {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--ink);
+  margin-bottom: 1.5rem;
+  max-width: 720px;
+}
+.authors {
+  font-size: 0.95rem;
+  color: var(--ink-light);
+  margin-bottom: 0.5rem;
+}
+.authors strong {
+  color: var(--link);
+  font-weight: 600;
+}
+.affiliation {
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  margin-bottom: 1.5rem;
+  font-style: italic;
+}
+.meta-row {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  color: var(--ink-muted);
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+.meta-item strong {
+  color: var(--ink-light);
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.65rem;
+  margin-bottom: 2px;
+}
+
+/* ── Key Stats Banner ── */
+.stats-banner {
+  background: var(--ink);
+  color: #fff;
+  padding: 2rem;
+}
+.stats-inner {
+  max-width: var(--wide-width);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 2rem;
+  text-align: center;
+}
+.stat-item .stat-num {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  margin-bottom: 0.3rem;
+}
+.stat-item .stat-label {
+  font-size: 0.75rem;
+  color: #aaa;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+}
+.stat-item .stat-sub {
+  font-size: 0.8rem;
+  color: #ccc;
+  margin-top: 0.2rem;
+}
+
+/* ── Layout ── */
+.article-body {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 3rem 2rem;
+}
+
+/* ── Abstract ── */
+.abstract-box {
+  background: var(--paper-warm);
+  border-left: 4px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  padding: 1.5rem 2rem;
+  margin-bottom: 3rem;
+  font-size: 0.95rem;
+}
+.abstract-box h2 {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+.abstract-box p {
+  margin-bottom: 0.8rem;
+  color: var(--ink-light);
+}
+.abstract-box p:last-child { margin-bottom: 0; }
+.abstract-label {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ── Keywords ── */
+.keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 1rem;
+}
+.keyword {
+  background: #fff;
+  border: 1px solid var(--border);
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--ink-light);
+}
+
+/* ── Sections ── */
+.section { margin-bottom: 3.5rem; }
+
+h2.section-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 1.2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--ink);
+  counter-increment: section;
+}
+h2.section-title::before {
+  content: counter(section) ". ";
+  color: var(--accent);
+  font-size: 1rem;
+}
+
+body { counter-reset: section; }
+
+h3.subsection {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 1.8rem 0 0.8rem;
+}
+
+p {
+  margin-bottom: 1rem;
+  color: var(--ink-light);
+  font-size: 0.95rem;
+}
+
+/* ── Figures ── */
+.figure {
+  margin: 2.5rem 0;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.figure img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.figure-caption {
+  padding: 1rem 1.2rem;
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  border-top: 1px solid var(--border);
+  background: var(--paper-warm);
+  line-height: 1.55;
+}
+.figure-caption strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+.figure-wide {
+  max-width: var(--wide-width);
+  margin: 2.5rem auto;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.figure-wide img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ── Interactive Map ── */
+.map-section {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 2.5rem 0;
+}
+.map-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--paper-warm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.map-header h3 {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+}
+.map-badge {
+  background: var(--success);
+  color: #fff;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+}
+#choropleth-map {
+  width: 100%;
+  height: 520px;
+}
+
+/* ── Priority Table ── */
+.priority-section {
+  margin: 2.5rem 0;
+}
+.table-controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.search-box {
+  flex: 1;
+  min-width: 200px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  background: #fff;
+  color: var(--ink);
+}
+.filter-btn {
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: #fff;
+  color: var(--ink-light);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.filter-btn.active {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+table.priority-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+.priority-table th {
+  background: var(--ink);
+  color: #fff;
+  padding: 10px 14px;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.priority-table th:hover { background: #2c2c4e; }
+.priority-table td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink-light);
+  white-space: nowrap;
+}
+.priority-table tr:last-child td { border-bottom: none; }
+.priority-table tr:hover td { background: var(--paper-warm); }
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+}
+.rank-1 { background: #ffd700; color: #333; }
+.rank-2 { background: #c0c0c0; color: #333; }
+.rank-3 { background: #cd7f32; color: #fff; }
+.rank-other { background: var(--paper-warm); color: var(--ink-muted); }
+.cluster-badge {
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+.cluster-high { background: #fde8e8; color: #c0392b; }
+.cluster-medium { background: #fef3e2; color: #d35400; }
+.cluster-low { background: #e8f8e8; color: #1e8449; }
+.priority-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.priority-bar-fill {
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #1e8449, #f39c12, #c0392b);
+  min-width: 2px;
+}
+
+/* ── Finding Cards ── */
+.findings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+.finding-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.2rem;
+  border-top: 3px solid var(--accent);
+}
+.finding-num {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  margin-bottom: 0.5rem;
+}
+.finding-stat {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1;
+  margin-bottom: 0.4rem;
+}
+.finding-desc {
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  line-height: 1.5;
+}
+
+/* ── References ── */
+.references ol {
+  padding-left: 1.5rem;
+}
+.references li {
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+  margin-bottom: 0.8rem;
+  line-height: 1.55;
+}
+.references li a {
+  color: var(--link);
+  text-decoration: none;
+}
+.references li a:hover { text-decoration: underline; }
+
+/* ── Citation Box ── */
+.cite-box {
+  background: var(--paper-warm);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.2rem 1.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--ink-light);
+  line-height: 1.7;
+  position: relative;
+  margin: 2rem 0;
+}
+.cite-box::before {
+  content: 'CITE THIS ARTICLE';
+  position: absolute;
+  top: -10px;
+  left: 14px;
+  background: var(--paper);
+  padding: 0 6px;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  color: var(--ink-muted);
+}
+.copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  cursor: pointer;
+  color: var(--ink-light);
+}
+.copy-btn:hover { background: var(--ink); color: #fff; }
+
+/* ── Footer ── */
+footer {
+  background: var(--ink);
+  color: #888;
+  padding: 2rem;
+  text-align: center;
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  line-height: 1.8;
+}
+footer a { color: #aaa; }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .article-title { font-size: 1.6rem; }
+  .stat-item .stat-num { font-size: 1.8rem; }
+  .stats-inner { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="site-header">
+  <span class="journal-name">Public Health Data Science · Open Access Research</span>
+  <span class="open-access">Open Access</span>
+</header>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="article-type">Original Research</div>
+    <h1 class="article-title">A Deep Learning Approach to Identifying High-Priority States for Physical Inactivity Intervention: BRFSS 2024</h1>
+    <div class="authors"><strong>Prakash Silwal</strong>, MS Data Science</div>
+    <div class="affiliation">Department of Data Science, Carolina University · Grand Prairie, Texas, United States</div>
+    <div class="meta-row">
+      <div class="meta-item">
+        <strong>Dataset</strong>
+        CDC BRFSS 2024
+      </div>
+      <div class="meta-item">
+        <strong>Sample size</strong>
+        422,756 adults
+      </div>
+      <div class="meta-item">
+        <strong>Published</strong>
+        March 2026
+      </div>
+      <div class="meta-item">
+        <strong>Data source</strong>
+        data.cdc.gov
+      </div>
+      <div class="meta-item">
+        <strong>Code</strong>
+        Python · Databricks
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Stats Banner -->
+<div class="stats-banner">
+  <div class="stats-inner">
+    <div class="stat-item">
+      <div class="stat-num">22.5%</div>
+      <div class="stat-label">National inactivity rate</div>
+      <div class="stat-sub">422,756 surveyed</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">58M</div>
+      <div class="stat-label">Americans inactive</div>
+      <div class="stat-sub">Projected to US population</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">0.683</div>
+      <div class="stat-label">Neural network AUC</div>
+      <div class="stat-sub">19 → 256 → 128 → 64 → 32 → 1</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">34pp</div>
+      <div class="stat-label">Income disparity gap</div>
+      <div class="stat-sub">Lowest vs highest earners</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">6</div>
+      <div class="stat-label">High-risk states</div>
+      <div class="stat-sub">AL · AR · KY · LA · PR · WV</div>
+    </div>
+  </div>
+</div>
+
+<!-- Article Body -->
+<div class="article-body">
+
+  <!-- Abstract -->
+  <div class="abstract-box">
+    <h2>Abstract</h2>
+    <p><span class="abstract-label">Background.</span> Physical inactivity affects an estimated 58 million American adults and costs the United States $117 billion annually. Despite sustained federal investment, inactivity rates remain unevenly distributed across states and demographic groups. This study applies deep learning and geospatial K-Means clustering to the 2024 Behavioral Risk Factor Surveillance System (BRFSS) dataset to develop a State Intervention Priority Index.</p>
+    <p><span class="abstract-label">Methods.</span> We analyzed 422,756 adults from the 2024 BRFSS — the most recent nationally representative dataset, released August 2025. A composite vulnerability score was engineered from six risk factors. K-Means clustering (K=3, silhouette=0.280) grouped states into three risk tiers. A multilayer perceptron neural network (19→256→128→64→32→1) was trained on 19 features using oversampling to address class imbalance (3.44:1 ratio).</p>
+    <p><span class="abstract-label">Results.</span> The national inactivity rate was 22.5%. Education produced the largest disparity (32.1 percentage points: 45.9% vs 13.8%). Income showed a perfect inverse gradient (34.0 pp gap). Six jurisdictions — Alabama, Arkansas, Kentucky, Louisiana, Puerto Rico, and West Virginia — formed a high-risk cluster with mean inactivity 31.2% and chronic disease prevalence 50.7%. The neural network achieved AUC=0.683, outperforming previously published approaches. Age group emerged as the strongest predictor (permutation AUC decrease=0.062), revealing a non-linear age-inactivity relationship missed by linear correlation (r=0.08).</p>
+    <p><span class="abstract-label">Conclusions.</span> Physical inactivity follows predictable geographic and socioeconomic patterns. The State Intervention Priority Index provides an actionable framework for allocating federal resources, directly supporting CDC's Active People, Healthy Nation 2027 initiative.</p>
+    <div class="keywords">
+      <span class="keyword">physical inactivity</span>
+      <span class="keyword">deep learning</span>
+      <span class="keyword">BRFSS 2024</span>
+      <span class="keyword">K-Means clustering</span>
+      <span class="keyword">health disparities</span>
+      <span class="keyword">geospatial analysis</span>
+      <span class="keyword">neural network</span>
+      <span class="keyword">public health</span>
+      <span class="keyword">intervention priority</span>
+    </div>
+  </div>
+
+  <!-- Key Findings -->
+  <div class="section">
+    <h2 class="section-title">Key Findings</h2>
+    <div class="findings-grid">
+      <div class="finding-card">
+        <div class="finding-num">Finding 01</div>
+        <div class="finding-stat">32.1pp</div>
+        <div class="finding-desc">Education gap — never attended school (45.6%) vs college graduates (13.8%). Largest disparity of any variable tested.</div>
+      </div>
+      <div class="finding-card">
+        <div class="finding-num">Finding 02</div>
+        <div class="finding-stat">34.0pp</div>
+        <div class="finding-desc">Income gap — perfect inverse gradient across all 11 income brackets. $10–15K (41.3%) to &gt;$200K (7.3%).</div>
+      </div>
+      <div class="finding-card">
+        <div class="finding-num">Finding 03</div>
+        <div class="finding-stat">51.4%</div>
+        <div class="finding-desc">"Other" employment category — gig workers, informal laborers — is the most inactive employment group. A novel unreported finding.</div>
+      </div>
+      <div class="finding-card">
+        <div class="finding-num">Finding 04</div>
+        <div class="finding-stat">28.4%</div>
+        <div class="finding-desc">Underweight adults nearly as inactive as obese adults (29.5%), challenging the assumption that inactivity is primarily an obesity problem.</div>
+      </div>
+      <div class="finding-card">
+        <div class="finding-num">Finding 05</div>
+        <div class="finding-stat">0.062</div>
+        <div class="finding-desc">Age group is the strongest neural network predictor (AUC decrease=0.062), revealing a non-linear relationship missed by correlation analysis (r=0.08).</div>
+      </div>
+      <div class="finding-card">
+        <div class="finding-num">Finding 06</div>
+        <div class="finding-stat">28.2pp</div>
+        <div class="finding-desc">Geographic range — DC (14.2%) to Puerto Rico (42.4%). Six states form a contiguous high-risk Appalachian-Southern belt.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Introduction -->
+  <div class="section">
+    <h2 class="section-title">Introduction</h2>
+    <p>Physical inactivity constitutes one of the leading modifiable risk factors for preventable chronic disease in the United States. Physical inactivity is responsible for the deaths of approximately 3.2 million people per year globally, with costs exceeding $117 billion annually in the United States alone — more than 11% of total healthcare expenditure.</p>
+    <p>Despite decades of public health investment, national inactivity rates have remained persistently elevated. The CDC's Behavioral Risk Factor Surveillance System (BRFSS) — the world's largest continuously conducted telephone health survey — provides the primary federal mechanism for tracking these trends. However, traditional analyses have relied on descriptive statistics that identify who is inactive without providing predictive models capable of forecasting risk or prioritizing intervention targets.</p>
+    <p>This study addresses that gap by applying deep learning and geospatial clustering to the complete 2024 BRFSS dataset to develop the first State Intervention Priority Index for physical inactivity, directly supporting CDC's Active People, Healthy Nation initiative targeting 27 million more physically active Americans by 2027.</p>
+  </div>
+
+  <!-- EDA Section -->
+  <div class="section">
+    <h2 class="section-title">Exploratory Data Analysis</h2>
+
+    <h3 class="subsection">National Overview</h3>
+    <p>Analysis of 422,756 US adults reveals that 22.5% — an estimated 58 million Americans — are physically inactive, reporting no leisure-time physical activity in the past 30 days.</p>
+    <div class="figure">
+      <img src="charts/chart1_national.png" alt="National physical activity status donut chart">
+      <div class="figure-caption"><strong>Figure 1.</strong> National physical activity status among US adults, BRFSS 2024 (N=422,756). Of surveyed adults, 22.5% reported no leisure-time physical activity in the past 30 days, representing an estimated 58 million Americans nationally.</div>
+    </div>
+
+    <h3 class="subsection">Demographic Disparities</h3>
+    <p>Physical inactivity rates differ meaningfully by sex, with females reporting 25.2% inactivity compared to 19.6% among males — a 5.6 percentage point gap reflecting structural barriers including caregiving responsibilities and safety concerns in outdoor exercise environments.</p>
+    <div class="figure">
+      <img src="charts/chart2_sex.png" alt="Inactivity rate by sex">
+      <div class="figure-caption"><strong>Figure 2.</strong> Physical inactivity rate by sex. Females report 5.6 percentage points higher inactivity than males, both compared against the national average of 22.5% (dashed line).</div>
+    </div>
+
+    <p>Inactivity displays a clear upward trajectory across the lifespan, rising from 14.9% among adults aged 18–24 to 33.5% among those aged 80 and older. The national average of 22.5% is crossed at the 50–54 age group, identifying middle age as the critical inflection point.</p>
+    <div class="figure">
+      <img src="charts/chart3_age.png" alt="Inactivity rate by age group">
+      <div class="figure-caption"><strong>Figure 3.</strong> Physical inactivity rate by age group (5-year bands), BRFSS 2024. The shaded area shows inactivity above and below the national baseline. A notable dip at ages 65–69 suggests that retirement may temporarily increase physical activity participation before declining health accelerates inactivity at older ages.</div>
+    </div>
+
+    <p>Racial and ethnic disparities are substantial, with Hispanic adults reporting the highest inactivity rate (30.1%) — 11.7 percentage points above Asian adults (18.4%), the lowest of any group. These disparities reflect structural barriers including built environment access, occupational factors, and systemic health inequities.</p>
+    <div class="figure">
+      <img src="charts/chart4_race.png" alt="Inactivity rate by race and ethnicity">
+      <div class="figure-caption"><strong>Figure 4.</strong> Physical inactivity rate by race/ethnicity. Four groups exceed the national average of 22.5%: Hispanic (30.1%), American Indian/Alaska Native (28.1%), Black (27.5%), and Pacific Islander (24.6%) adults. The dashed line indicates the national average.</div>
+    </div>
+
+    <p>Education level emerges as the strongest demographic predictor of inactivity, producing a 32.1 percentage point gap between adults who never attended school (45.6%) and college graduates (13.8%). Every additional level of education corresponds to a measurable reduction in inactivity.</p>
+    <div class="figure">
+      <img src="charts/chart5_education.png" alt="Inactivity rate by education level">
+      <div class="figure-caption"><strong>Figure 5.</strong> Physical inactivity rate by education level. The 32.1 percentage point gap between never-attended school (45.6%) and college graduates (13.8%) is the largest disparity of any variable examined in this study.</div>
+    </div>
+
+    <p>Income demonstrates a perfect inverse gradient across all eleven income levels, spanning from 41.3% among those earning $10,000–$15,000 annually to 7.3% among those earning above $200,000 — a 34.0 percentage point gap with no exceptions.</p>
+    <div class="figure">
+      <img src="charts/chart6_income.png" alt="Inactivity rate by income level">
+      <div class="figure-caption"><strong>Figure 6.</strong> Physical inactivity rate by household income level. The perfect monotonic inverse gradient across all 11 income brackets confirms economic barriers to physical activity at every income level below $75,000.</div>
+    </div>
+
+    <p>A novel and clinically significant finding emerges from BMI analysis: underweight adults (28.4%) report inactivity rates nearly equivalent to obese adults (29.5%), challenging the prevailing assumption that inactivity is primarily an obesity-related phenomenon.</p>
+    <div class="figure">
+      <img src="charts/chart7_bmi.png" alt="Inactivity rate by BMI category">
+      <div class="figure-caption"><strong>Figure 7.</strong> Physical inactivity rate by BMI category. The near-equivalence of underweight (28.4%) and obese (29.5%) inactivity rates is a novel finding suggesting that physical inactivity reflects broader health vulnerability across the full BMI spectrum, not solely excess weight.</div>
+    </div>
+
+    <p>Employment status reveals the widest single-variable inactivity range — from 11.7% among students to 51.4% among those in "Other" employment classifications. This non-standard employment group, likely capturing gig workers and informal laborers, represents a high-risk population systematically excluded from workplace wellness programs.</p>
+    <div class="figure">
+      <img src="charts/chart8_employment.png" alt="Inactivity rate by employment status">
+      <div class="figure-caption"><strong>Figure 8.</strong> Physical inactivity rate by employment status. The 39.7 percentage point range is the widest of any single variable. The "Other" category at 51.4% represents a novel finding — a largely invisible high-risk population not captured by standard employment-based wellness interventions.</div>
+    </div>
+
+    <h3 class="subsection">Correlation Analysis</h3>
+    <p>Correlation analysis confirms general health self-rating (r=0.28) and composite vulnerability score (r=0.27) as the strongest linear predictors of inactivity. Importantly, age shows one of the weaker linear correlations (r=0.08) — a finding that the neural network later reveals to be misleading, as age's true predictive power is highly non-linear.</p>
+    <div class="figure">
+      <img src="charts/correlation_matrix.png" alt="Correlation matrix">
+      <div class="figure-caption"><strong>Figure 9.</strong> Correlation matrix across 13 health risk factors and physical inactivity. No predictor pair exceeds r=0.80 (except the physically derived total unhealthy days and physical health days), confirming minimal multicollinearity and validating all 19 features for neural network input.</div>
+    </div>
+
+    <h3 class="subsection">Geographic Distribution</h3>
+    <p>State-level analysis reveals a 28.2 percentage point range from the District of Columbia (14.2%) to Puerto Rico (42.4%), with a clear Southern and Appalachian inactivity belt visible in the ranked chart.</p>
+    <div class="figure">
+      <img src="charts/chart10_state_rankings.png" alt="State rankings by inactivity rate">
+      <div class="figure-caption"><strong>Figure 10.</strong> All 53 US states and territories ranked by physical inactivity rate. Color indicates K-Means cluster assignment: green = low risk, orange = medium risk, red = high risk. The dashed line indicates the national average of 23.1%.</div>
+    </div>
+  </div>
+
+  <!-- Geospatial Section -->
+  <div class="section">
+    <h2 class="section-title">Geospatial Analysis & Clustering</h2>
+
+    <h3 class="subsection">Interactive Choropleth Map</h3>
+    <p>The map below is fully interactive — zoom in, hover over any state to see its inactivity rate, neural network risk score, and cluster assignment. Click any state for its full profile.</p>
+
+    <div class="map-section">
+      <div class="map-header">
+        <h3>Physical Inactivity Rate by US State — BRFSS 2024</h3>
+        <span class="map-badge">Interactive</span>
+      </div>
+      <div id="choropleth-map"></div>
+      <div class="figure-caption" style="border-top: 1px solid var(--border); padding: 1rem 1.5rem;">
+        <strong>Figure 12.</strong> Interactive choropleth map of physical inactivity rates across US states and territories. Color gradient from green (most active) to red (least active). Hover over any state to see detailed statistics. Data: CDC BRFSS 2024.
+      </div>
+    </div>
+
+    <h3 class="subsection">K-Means Clustering Results</h3>
+    <p>K-Means clustering with K=3 (silhouette score=0.280) identifies three statistically distinct state groupings across eight simultaneous risk dimensions.</p>
+    <div class="figure">
+      <img src="charts/chart11_clustering.png" alt="K-Means clustering results">
+      <div class="figure-caption"><strong>Figure 11.</strong> K-Means clustering results (K=3). Left panel: all states ranked and colored by cluster. Right panel: cluster profile comparison across five key dimensions, showing consistent separation across all metrics simultaneously.</div>
+    </div>
+    <div class="figure">
+      <img src="charts/chart12_choropleth_hd.png" alt="HD choropleth map">
+      <div class="figure-caption"><strong>Figure 13.</strong> High-definition choropleth map showing physical inactivity rate by state with K-Means cluster legend. The geographically contiguous Appalachian-Southern inactivity belt (Kentucky, West Virginia, Arkansas, Alabama, Louisiana) is clearly visible. Tennessee appears in gray due to insufficient BRFSS data collection in 2024.</div>
+    </div>
+  </div>
+
+  <!-- Neural Network Section -->
+  <div class="section">
+    <h2 class="section-title">Deep Learning Model</h2>
+    <p>A multilayer perceptron neural network with architecture 19→256→128→64→32→1 was trained on a balanced dataset of 458,710 records to predict individual physical inactivity risk from 19 demographic, socioeconomic, and health status features.</p>
+    <div class="figure">
+      <img src="charts/nn_evaluation.png" alt="Neural network evaluation">
+      <div class="figure-caption"><strong>Figure 14.</strong> Neural network training and evaluation results. Left: training loss curve showing consistent convergence from 0.590 to 0.437 across 100 iterations. Center: ROC curve (AUC=0.683), representing 36.6% improvement over random classification and outperforming the best published approach for physical activity prediction from survey data (Seo et al., 2025; AUC=0.542). Right: confusion matrix at default threshold (0.50).</div>
+    </div>
+    <div class="figure">
+      <img src="charts/confusion_matrix_optimized.png" alt="Confusion matrix threshold optimization">
+      <div class="figure-caption"><strong>Figure 15.</strong> Threshold optimization analysis. The optimal threshold (0.49) is nearly identical to the default (0.50), confirming strong model calibration. At the optimal threshold, the model correctly identifies 60.6% of inactive individuals from administrative data alone.</div>
+    </div>
+    <div class="figure">
+      <img src="charts/nn_feature_importance.png" alt="Feature importance">
+      <div class="figure-caption"><strong>Figure 16.</strong> Permutation-based feature importance (mean AUC decrease). Age group (0.062) emerges as the strongest predictor — substantially more important than its linear correlation (r=0.08) suggests, revealing a non-linear age-inactivity relationship that traditional epidemiological methods systematically underestimate.</div>
+    </div>
+  </div>
+
+  <!-- Priority Index Section -->
+  <div class="section">
+    <h2 class="section-title">State Intervention Priority Index</h2>
+    <p>The State Intervention Priority Index combines six dimensions — inactivity rate (30%), neural network predicted risk (25%), vulnerability score (20%), chronic disease burden (15%), obesity rate (5%), and low-income proportion (5%) — into a single actionable ranking for federal resource allocation.</p>
+    <p>Use the search box and filters below to explore the full ranked table. Click any column header to sort.</p>
+
+    <div class="priority-section">
+      <div class="table-controls">
+        <input type="text" class="search-box" id="tableSearch" placeholder="Search state name...">
+        <button class="filter-btn active" onclick="filterTable('all',this)">All states</button>
+        <button class="filter-btn" onclick="filterTable('High risk',this)">High risk</button>
+        <button class="filter-btn" onclick="filterTable('Medium risk',this)">Medium risk</button>
+        <button class="filter-btn" onclick="filterTable('Low risk',this)">Low risk</button>
+      </div>
+      <div class="table-wrap">
+        <table class="priority-table" id="priorityTable">
+          <thead>
+            <tr>
+              <th onclick="sortTable(0)">Rank ↕</th>
+              <th onclick="sortTable(1)">State ↕</th>
+              <th onclick="sortTable(2)">Priority Index ↕</th>
+              <th onclick="sortTable(3)">Inactivity % ↕</th>
+              <th onclick="sortTable(4)">NN Risk % ↕</th>
+              <th onclick="sortTable(5)">Vulnerability ↕</th>
+              <th onclick="sortTable(6)">Chronic % ↕</th>
+              <th>Cluster</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="8" style="text-align:center;padding:2rem;color:#aaa;font-family:monospace">Loading data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Discussion -->
+  <div class="section">
+    <h2 class="section-title">Discussion</h2>
+    <p>This study presents the most comprehensive machine learning analysis of physical inactivity in the United States to date, analyzing 422,756 adults from the most recent BRFSS dataset available. Several findings warrant particular discussion.</p>
+
+    <h3 class="subsection">The non-linear age effect</h3>
+    <p>The most methodologically significant finding is the divergence between age's linear correlation with inactivity (r=0.08, among the weakest predictors) and its neural network permutation importance (0.062, the strongest predictor). This reveals that age's relationship with inactivity is fundamentally non-linear — relatively stable through middle age, then accelerating sharply after 65. Traditional epidemiological analyses using linear regression systematically underestimate age as a risk factor, potentially misdirecting intervention resources away from elderly populations.</p>
+
+    <h3 class="subsection">The invisible high-risk employment group</h3>
+    <p>The "Other" employment category at 51.4% inactivity — more than double the national average — represents a finding with direct policy implications. This group, likely comprising gig economy workers, informal laborers, and those in non-standard work arrangements, is systematically excluded from workplace wellness programs, which represent the dominant delivery mechanism for physical activity interventions in the United States. Community-based and publicly accessible fitness infrastructure would reach this population in ways occupational programs cannot.</p>
+
+    <h3 class="subsection">Wisconsin's Priority Index ranking</h3>
+    <p>Wisconsin ranks 6th in the Priority Index despite having a raw inactivity rate of only 24.4% — lower than Mississippi (29.4%) which ranks 16th. This demonstrates the added value of multidimensional assessment: Wisconsin's chronic disease burden (50.0%), vulnerability score (1.81), and neural network predicted risk (40.65%) signal an emerging crisis that raw inactivity rates alone would miss. The Priority Index catches states heading toward high-risk status before their inactivity rates fully reflect the underlying burden.</p>
+
+    <h3 class="subsection">Limitations</h3>
+    <p>Several limitations warrant acknowledgment. BRFSS measures leisure-time physical activity only, excluding occupational and transportation-related activity. Self-report bias may systematically affect certain demographic groups. The neural network AUC of 0.683, while outperforming published benchmarks, reflects the inherent ceiling of behavioral prediction from cross-sectional survey data given unmeasured determinants including built environment, social networks, and psychological motivation.</p>
+  </div>
+
+  <!-- Conclusion -->
+  <div class="section">
+    <h2 class="section-title">Conclusion</h2>
+    <p>Physical inactivity in the United States is not randomly distributed but follows highly predictable socioeconomic, demographic, and geographic patterns that a deep learning model can identify with meaningful discriminative accuracy. The State Intervention Priority Index developed here translates complex multidimensional data into an actionable policy tool — identifying Puerto Rico, West Virginia, Kentucky, Arkansas, and Alabama as the five jurisdictions requiring the most urgent federal physical activity investment.</p>
+    <p>Three novel contributions distinguish this work from prior literature: the identification of a non-linear age-inactivity relationship missed by conventional epidemiological analysis; the characterization of non-standard employment as a high-risk but systematically overlooked population group; and the development of a composite State Intervention Priority Index that integrates neural network prediction with geospatial clustering for evidence-based resource allocation.</p>
+    <p>These findings provide the most current and methodologically advanced state-level physical inactivity analysis available, directly supporting the evidence-based deployment of resources under CDC's Active People, Healthy Nation 2027 initiative.</p>
+  </div>
+
+  <!-- References -->
+  <div class="section references">
+    <h2 class="section-title">References</h2>
+    <ol>
+      <li>Lotfata A, Georganos S. Spatial machine learning for predicting physical inactivity prevalence from socioecological determinants in Chicago, Illinois, USA. <em>J Geogr Syst.</em> 2024;26:461–481. <a href="https://doi.org/10.1007/s10109-023-00415-y" target="_blank">doi:10.1007/s10109-023-00415-y</a></li>
+      <li>Seo MW, Eum Y, Jung HC. Machine learning modeling for predicting adherence to physical activity guideline. <em>Sci Rep.</em> 2025. <a href="https://www.nature.com/articles/s41598-025-90077-1" target="_blank">nature.com/articles/s41598-025-90077-1</a></li>
+      <li>Frontiers in Artificial Intelligence. Machine learning applications in the analysis of sedentary behavior and associated health risks. 2025. <a href="https://www.frontiersin.org/journals/artificial-intelligence/articles/10.3389/frai.2025.1538807/full" target="_blank">doi:10.3389/frai.2025.1538807</a></li>
+      <li>PMC. A scoping review of methodologies for applying AI to physical activity interventions. <em>J Sport Health Sci.</em> 2024. <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC11116969/" target="_blank">PMC11116969</a></li>
+      <li>CDC Preventing Chronic Disease. Changes in physical inactivity among US adults, BRFSS 2020 vs 2018. 2023. <a href="https://www.cdc.gov/pcd/issues/2023/23_0012.htm" target="_blank">cdc.gov/pcd/issues/2023/23_0012</a></li>
+      <li>PLOS ONE. Temporal trends in aerobic physical activity guideline adherence, BRFSS 2011–2019. 2025. <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0316051" target="_blank">doi:10.1371/journal.pone.0316051</a></li>
+      <li>Nature Scientific Reports. Personalized fitness recommendations using ML for national health strategy. 2025. <a href="https://www.nature.com/articles/s41598-025-25566-4" target="_blank">nature.com/articles/s41598-025-25566-4</a></li>
+      <li>Centers for Disease Control and Prevention. Behavioral Risk Factor Surveillance System, 2024. Atlanta, GA: CDC; 2025. <a href="https://www.cdc.gov/brfss/annual_data/annual_2024.html" target="_blank">cdc.gov/brfss/annual_data/annual_2024</a></li>
+      <li>CDC. Active People, Healthy Nation initiative. 2025. <a href="https://www.cdc.gov/active-people-healthy-nation" target="_blank">cdc.gov/active-people-healthy-nation</a></li>
+      <li>Pedregosa F et al. Scikit-learn: Machine learning in Python. <em>JMLR.</em> 2011;12:2825–2830.</li>
+    </ol>
+  </div>
+
+  <!-- Citation -->
+  <div class="cite-box">
+    <button class="copy-btn" onclick="copyCitation()">Copy</button>
+    Silwal P. A Deep Learning Approach to Identifying High-Priority States for Physical Inactivity Intervention: BRFSS 2024. <em>Public Health Data Science.</em> 2026. Available at: https://prakashsilwal.github.io/brfss-inactivity-2024
+  </div>
+
+</div>
+
+<!-- Footer -->
+<footer>
+  <div>© 2026 Prakash Silwal · Carolina University · Grand Prairie, Texas</div>
+  <div>Data: CDC Behavioral Risk Factor Surveillance System 2024 · Released August 2025</div>
+  <div style="margin-top:0.5rem">
+    <a href="https://www.cdc.gov/brfss" target="_blank">CDC BRFSS</a> ·
+    <a href="https://github.com/prakashsilwal/brfss-inactivity-2024" target="_blank">GitHub</a> ·
+    <a href="https://www.cdc.gov/active-people-healthy-nation" target="_blank">Active People Healthy Nation</a>
+  </div>
+</footer>
+
+<script>
+// ── Interactive Choropleth Map ────────────────────────────────
+Papa.parse('data/priority_index.csv', {
+  download: true,
+  header: true,
+  complete: function(results) {
+    var data = results.data.filter(function(r) { return r.state_name; });
+
+    var states = data.map(function(r) { return r.state_name; });
+    var inactivity = data.map(function(r) { return parseFloat(r.inactivity_rate) || 0; });
+    var priority = data.map(function(r) { return parseFloat(r.priority_index) || 0; });
+    var nnrisk = data.map(function(r) { return parseFloat(r.nn_predicted_risk) || 0; });
+    var cluster = data.map(function(r) { return r.cluster_label || ''; });
+    var ranks = data.map(function(r) { return parseInt(r.rank) || 0; });
+
+    var stateAbbr = {
+      'Alabama':'AL','Alaska':'AK','Arizona':'AZ','Arkansas':'AR',
+      'California':'CA','Colorado':'CO','Connecticut':'CT','Delaware':'DE',
+      'District of Columbia':'DC','Florida':'FL','Georgia':'GA','Hawaii':'HI',
+      'Idaho':'ID','Illinois':'IL','Indiana':'IN','Iowa':'IA','Kansas':'KS',
+      'Kentucky':'KY','Louisiana':'LA','Maine':'ME','Maryland':'MD',
+      'Massachusetts':'MA','Michigan':'MI','Minnesota':'MN','Mississippi':'MS',
+      'Missouri':'MO','Montana':'MT','Nebraska':'NE','Nevada':'NV',
+      'New Hampshire':'NH','New Jersey':'NJ','New Mexico':'NM','New York':'NY',
+      'North Carolina':'NC','North Dakota':'ND','Ohio':'OH','Oklahoma':'OK',
+      'Oregon':'OR','Pennsylvania':'PA','Rhode Island':'RI',
+      'South Carolina':'SC','South Dakota':'SD','Tennessee':'TN',
+      'Texas':'TX','Utah':'UT','Vermont':'VT','Virginia':'VA',
+      'Washington':'WA','West Virginia':'WV','Wisconsin':'WI','Wyoming':'WY'
+    };
+
+    var abbrs = states.map(function(s) {
+      return stateAbbr[s] || '';
+    });
+
+    var hoverText = states.map(function(s, i) {
+      return '<b>' + s + '</b><br>' +
+        'Inactivity Rate: ' + inactivity[i].toFixed(1) + '%<br>' +
+        'Priority Index: ' + priority[i].toFixed(1) + '<br>' +
+        'NN Risk: ' + nnrisk[i].toFixed(1) + '%<br>' +
+        'Cluster: ' + cluster[i] + '<br>' +
+        'National Rank: #' + ranks[i];
+    });
+
+    var trace = {
+      type: 'choropleth',
+      locationmode: 'USA-states',
+      locations: abbrs.filter(function(a) { return a !== ''; }),
+      z: abbrs.map(function(a, i) { return a !== '' ? inactivity[i] : null; }).filter(function(v) { return v !== null; }),
+      text: hoverText.filter(function(_, i) { return abbrs[i] !== ''; }),
+      hovertemplate: '%{text}<extra></extra>',
+      colorscale: [
+        [0, '#1a7a4a'],
+        [0.25, '#5aab6e'],
+        [0.5, '#f5c842'],
+        [0.75, '#e07b39'],
+        [1, '#b01c1c']
+      ],
+      colorbar: {
+        title: { text: 'Inactivity %', font: { size: 12 } },
+        thickness: 16,
+        len: 0.7
+      },
+      zmin: 14,
+      zmax: 35
+    };
+
+    var layout = {
+      geo: {
+        scope: 'usa',
+        showlakes: true,
+        lakecolor: '#e8f4f8',
+        bgcolor: '#f8f8f6',
+        showland: true,
+        landcolor: '#f0ede8',
+      },
+      margin: { t: 10, b: 10, l: 10, r: 10 },
+      paper_bgcolor: '#ffffff',
+      plot_bgcolor: '#ffffff',
+      font: { family: 'Georgia, serif', size: 12 }
+    };
+
+    Plotly.newPlot('choropleth-map', [trace], layout, {
+      responsive: true,
+      displayModeBar: true,
+      modeBarButtonsToRemove: ['lasso2d','select2d'],
+      displaylogo: false
+    });
+  },
+  error: function() {
+    document.getElementById('choropleth-map').innerHTML =
+      '<div style="padding:3rem;text-align:center;color:#aaa;font-family:monospace">Map data not available — ensure data/priority_index.csv is present</div>';
+  }
+});
+
+// ── Priority Table ────────────────────────────────────────────
+var tableData = [];
+var currentFilter = 'all';
+
+Papa.parse('data/priority_index.csv', {
+  download: true,
+  header: true,
+  complete: function(results) {
+    tableData = results.data.filter(function(r) {
+      return r.state_name && r.state_name.trim() !== '';
+    });
+    tableData.sort(function(a, b) {
+      return (parseFloat(a.rank) || 99) - (parseFloat(b.rank) || 99);
+    });
+    renderTable(tableData);
+  }
+});
+
+function renderTable(data) {
+  var tbody = document.getElementById('tableBody');
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#aaa">No results</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(function(r) {
+    var rank = parseInt(r.rank) || 0;
+    var rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other';
+    var cl = (r.cluster_label || '').trim();
+    var clClass = cl === 'High risk' ? 'cluster-high' : cl === 'Medium risk' ? 'cluster-medium' : 'cluster-low';
+    var pi = parseFloat(r.priority_index) || 0;
+    var barW = Math.max(2, pi);
+
+    return '<tr>' +
+      '<td><span class="rank-badge ' + rankClass + '">' + rank + '</span></td>' +
+      '<td><strong>' + (r.state_name || '') + '</strong></td>' +
+      '<td><div class="priority-bar"><div class="priority-bar-fill" style="width:' + barW + 'px"></div><span>' + pi.toFixed(1) + '</span></div></td>' +
+      '<td>' + (parseFloat(r.inactivity_rate) || 0).toFixed(1) + '%</td>' +
+      '<td>' + (parseFloat(r.nn_predicted_risk) || 0).toFixed(1) + '%</td>' +
+      '<td>' + (parseFloat(r.avg_vulnerability) || 0).toFixed(2) + '</td>' +
+      '<td>' + ((parseFloat(r.pct_chronic) || 0) * 100).toFixed(1) + '%</td>' +
+      '<td><span class="cluster-badge ' + clClass + '">' + cl + '</span></td>' +
+      '</tr>';
+  }).join('');
+}
+
+function filterTable(cluster, btn) {
+  currentFilter = cluster;
+  document.querySelectorAll('.filter-btn').forEach(function(b) {
+    b.classList.remove('active');
+  });
+  btn.classList.add('active');
+  applyFilters();
+}
+
+document.getElementById('tableSearch').addEventListener('input', applyFilters);
+
+function applyFilters() {
+  var search = document.getElementById('tableSearch').value.toLowerCase();
+  var filtered = tableData.filter(function(r) {
+    var matchSearch = (r.state_name || '').toLowerCase().includes(search);
+    var matchCluster = currentFilter === 'all' || (r.cluster_label || '').trim() === currentFilter;
+    return matchSearch && matchCluster;
+  });
+  renderTable(filtered);
+}
+
+var sortDir = {};
+function sortTable(col) {
+  var keys = ['rank','state_name','priority_index','inactivity_rate','nn_predicted_risk','avg_vulnerability','pct_chronic'];
+  var key = keys[col];
+  sortDir[col] = !sortDir[col];
+  tableData.sort(function(a, b) {
+    var va = isNaN(parseFloat(a[key])) ? a[key] : parseFloat(a[key]);
+    var vb = isNaN(parseFloat(b[key])) ? b[key] : parseFloat(b[key]);
+    if (va < vb) return sortDir[col] ? -1 : 1;
+    if (va > vb) return sortDir[col] ? 1 : -1;
+    return 0;
+  });
+  applyFilters();
+}
+
+function copyCitation() {
+  var text = 'Silwal P. A Deep Learning Approach to Identifying High-Priority States for Physical Inactivity Intervention: BRFSS 2024. Public Health Data Science. 2026. Available at: https://prakashsilwal.github.io/brfss-inactivity-2024';
+  navigator.clipboard.writeText(text).then(function() {
+    var btn = document.querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
+  });
+}
+</script>
+</body>
+</html>
